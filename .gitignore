@@ -32,7 +32,8 @@ Temporary Items
 ### その他
 (org)bidaf-keras
 # サイズの大きいデータの保管場所
-bidaf/data/*
+bidaf/data/magnitude/
+bidaf/data/models/*.h5
 # Jupyter Lab 系
 .ipynb_checkpoints
 

@@ -1,6 +1,6 @@
 from bidaf import BidirectionalAttentionFlow
 bidaf_model = BidirectionalAttentionFlow(400)
-bidaf_model.load_bidaf("bidaf/model_filss/bidaf_50.h5")
+bidaf_model.load_bidaf("bidaf/data/models/bidaf_50.h5")
 
 print('\nWarming up を開始します！')
 print(bidaf_model.predict_ans("This is a tree", "What is this?"))

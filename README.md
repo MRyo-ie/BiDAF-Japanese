@@ -27,13 +27,30 @@ $ cndac_BiDAF_test
 
 
 # テスト（英語版）
+## 準備
+### Pre-trained モデル を使わせてもらう
+https://github.com/ParikhKadam/bidaf-keras#pre-trained-models
+1. 以下をダウンロード
+   - **Model Name:** [bidaf_50.h5](https://drive.google.com/open?id=10C56f1DSkWbkBBhokJ9szXM44P9T-KfW)
+     
+     **Model Configuration:**
+       - lowercase: True
+       - batch size: 16
+       - max passage length: None
+       - max question length: None
+       - embedding dimension: 400
+       - squad version: 1.1
+
+2. bidaf/data/models/ を作って、そこに移動する。
+
+
 ## 対話形式で実行
 ```
 $ python3
 
 from bidaf import BidirectionalAttentionFlow
 bidaf_model = BidirectionalAttentionFlow(400)
-bidaf_model.load_bidaf("bidaf/model_filss/bidaf_50.h5")
+bidaf_model.load_bidaf("bidaf/data/models/bidaf_50.h5")
 
 # テスト！
 bidaf_model.predict_ans("This is a tree", "What is this?")
