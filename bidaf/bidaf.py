@@ -6,6 +6,8 @@ from .layers import Highway, Similarity, C2QAttention, Q2CAttention, MergedConte
 from .scripts import negative_avg_log_error, accuracy, tokenize, MagnitudeVectors, get_best_span, \
     get_word_char_loc_mapping
 from .scripts import ModelMGPU
+
+import configparser
 import os
 
 
@@ -13,6 +15,7 @@ class BidirectionalAttentionFlow():
 
     def __init__(self, emdim, max_passage_length=None, max_query_length=None, num_highway_layers=2, num_decoders=1,
                  encoder_dropout=0, decoder_dropout=0):
+        # モデルを構築
         self.emdim = emdim
         self.max_passage_length = max_passage_length
         self.max_query_length = max_query_length
@@ -90,19 +93,24 @@ class BidirectionalAttentionFlow():
                     validation_steps=None, workers=1, use_multiprocessing=False, shuffle=True, initial_epoch=0,
                     save_history=False, save_model_per_epoch=False):
 
-        saved_items_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'saved_items')
-        if not os.path.exists(saved_items_dir):
-            os.makedirs(saved_items_dir)
+        # _settings/BiDAF.cfg  から デフォルト設定を読み込み
+        # (未) Windows や他の OS のパス形式に対応させる必要あり。
+        inifile = configparser.ConfigParser()
+        inifile.read(os.path.join('_settings', os.pardir, 'BiDAF.cfg'), 'UTF-8')
+        saved_model_dir = inifile.get('data', 'model_dir_path')
+        saved_tmp_dir = os.path.join(saved_model_dir, os.pardir, 'tmp')
+        if not os.path.exists(saved_tmp_dir):
+            os.makedirs(saved_tmp_dir)
 
         callbacks = []
 
         if save_history:
-            history_file = os.path.join(saved_items_dir, 'history')
+            history_file = os.path.join(saved_tmp_dir, 'history')
             csv_logger = CSVLogger(history_file, append=True)
             callbacks.append(csv_logger)
 
         if save_model_per_epoch:
-            save_model_file = os.path.join(saved_items_dir, 'bidaf_{epoch:02d}.h5')
+            save_model_file = os.path.join(saved_tmp_dir, 'bidaf_{epoch:02d}.h5')
             checkpointer = ModelCheckpoint(filepath=save_model_file, verbose=1)
             callbacks.append(checkpointer)
 
@@ -112,7 +120,7 @@ class BidirectionalAttentionFlow():
                                            use_multiprocessing=use_multiprocessing, shuffle=shuffle,
                                            initial_epoch=initial_epoch)
         if not save_model_per_epoch:
-            self.model.save(os.path.join(saved_items_dir, 'bidaf.h5'))
+            self.model.save(os.path.join(saved_model_dir, 'bidaf.h5'))
 
         return history, self.model
 

@@ -29,18 +29,6 @@ Temporary Items
 .apdisk
 
 
-### その他
-(org)bidaf-keras
-# サイズの大きいデータの保管場所
-bidaf/data/magnitude/
-bidaf/data/models/*.h5
-# Jupyter Lab 系
-.ipynb_checkpoints
-
-# 個人情報系
-(memo)ServerSettings.md
-
-
 
 
 ### https://raw.github.com/github/gitignore/65bb94ddc106488eb227d147e3be956a6662857c/Python.gitignore
@@ -168,5 +156,22 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+
+
+
+
+### その他
+(org)bidaf-keras
+# サイズの大きいデータの保管場所
+bidaf/data/magnitude/
+bidaf/data/models/*.h5
+# Jupyter Lab 系
+.ipynb_checkpoints
+
+# 個人情報系
+(memo)ServerSettings.md
+.vscode
 
 

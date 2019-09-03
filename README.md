@@ -26,13 +26,12 @@ $ cndac_BiDAF_test
 
 
 
-# テスト（英語版）
+# 【Predict】 テスト（英語版）
 ## 準備
 ### Pre-trained モデル を使わせてもらう
 https://github.com/ParikhKadam/bidaf-keras#pre-trained-models
 1. 以下をダウンロード
    - **Model Name:** [bidaf_50.h5](https://drive.google.com/open?id=10C56f1DSkWbkBBhokJ9szXM44P9T-KfW)
-     
      **Model Configuration:**
        - lowercase: True
        - batch size: 16
@@ -41,18 +40,24 @@ https://github.com/ParikhKadam/bidaf-keras#pre-trained-models
        - embedding dimension: 400
        - squad version: 1.1
 
-2. bidaf/data/models/ を作って、そこに移動する。
+2. bidaf/data/models/ に移動する。
+   - ※ 場所を変えたい場合は、
+      `_settings/BiDAF.cfg` の `dir_path` に、パスを指定するとできる！
 
 
-## 対話形式で実行
+## Python インタプリタ で実行
 ```
 $ python3
-
+>>>
+```
+事前準備
+```
 from bidaf import BidirectionalAttentionFlow
 bidaf_model = BidirectionalAttentionFlow(400)
 bidaf_model.load_bidaf("bidaf/data/models/bidaf_50.h5")
-
-# テスト！
+```
+テスト！
+```
 bidaf_model.predict_ans("This is a tree", "What is this?")
 #=> {'answer': 'tree'}
 
@@ -79,8 +84,20 @@ What space station supported three manned missions in 1973–1974?
 
 
 
-
-
+# 【Train】（英語版）
+## Python インタプリタ で実行
+```
+$ python3
+>>>
+```
+```
+from bidaf import BidirectionalAttentionFlow
+from bidaf.scripts import load_data_generators
+bidaf_model = BidirectionalAttentionFlow(400)
+#bidaf_model.load_bidaf("bidaf/data/models/eng_model_test.h5") # when you want to resume training
+train_generator, validation_generator = load_data_generators(24, 400)
+keras_model = bidaf_model.train_model(train_generator, validation_generator=validation_generator)
+```
 
 
 
