@@ -3,9 +3,9 @@ from keras.models import Model, load_model
 from keras.optimizers import Adadelta
 from keras.callbacks import CSVLogger, ModelCheckpoint
 from .layers import Highway, Similarity, C2QAttention, Q2CAttention, MergedContext, SpanBegin, SpanEnd, CombineOutputs
-from .scripts import negative_avg_log_error, accuracy, tokenize, MagnitudeVectors, get_best_span, \
-    get_word_char_loc_mapping
+from .scripts import negative_avg_log_error, accuracy, MagnitudeVectors, get_best_span, get_word_char_loc_mapping
 from .scripts import ModelMGPU
+from .layer_embedding import tokenize
 
 import configparser
 import os
@@ -90,18 +90,20 @@ class BidirectionalAttentionFlow():
         self.model = load_model(path, custom_objects=custom_objects)
 
     def train_model(self, train_generator, steps_per_epoch=None, epochs=1, validation_generator=None,
-                    validation_steps=None, workers=1, use_multiprocessing=False, shuffle=True, initial_epoch=0,
-                    save_history=False, save_model_per_epoch=False):
+                    validation_steps=None, workers=3, use_multiprocessing=True, shuffle=True, initial_epoch=0,
+                    save_history=True, save_model_per_epoch=True):
 
         # _settings/BiDAF.cfg  から デフォルト設定を読み込み
         # (未) Windows や他の OS のパス形式に対応させる必要あり。
         inifile = configparser.ConfigParser()
-        inifile.read(os.path.join('_settings', os.pardir, 'BiDAF.cfg'), 'UTF-8')
+        inifile.read(os.path.join('_settings', 'BiDAF.cfg'), 'UTF-8')
+        print(inifile)
         saved_model_dir = inifile.get('data', 'model_dir_path')
         saved_tmp_dir = os.path.join(saved_model_dir, os.pardir, 'tmp')
         if not os.path.exists(saved_tmp_dir):
             os.makedirs(saved_tmp_dir)
 
+        # 学習開始
         callbacks = []
 
         if save_history:

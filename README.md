@@ -84,7 +84,18 @@ What space station supported three manned missions in 1973–1974?
 
 
 
-# 【Train】（英語版）
+# 【Train】SQuAD（英語版）
+## 準備（SQuAD）
+- v1.1 の場合
+  ```
+  $ python3 setup.py
+  ```
+- v2.0 の場合
+  ```
+  $ python3 setup.py -sv=2.0
+  ```
+- オプションで `-l`：`do_lowercase`
+
 ## Python インタプリタ で実行
 ```
 $ python3

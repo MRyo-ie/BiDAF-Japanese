@@ -30,10 +30,10 @@ class BatchGenerator(Sequence):
         self.batch_size = batch_size
         i = 0
         with open(self.span_file, 'r', encoding='utf-8') as f:
-
             for i, _ in enumerate(f):
                 pass
         self.num_of_batches = (i + 1) // self.batch_size
+        print('     i : {} ,   num_of_batches : {}'.format(i, self.num_of_batches))
         self.indices = np.arange(i + 1)
         self.shuffle = shuffle
 

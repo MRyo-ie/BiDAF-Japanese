@@ -167,6 +167,7 @@ dmypy.json
 # サイズの大きいデータの保管場所
 bidaf/data/magnitude/
 bidaf/data/models/*.h5
+bidaf/data/squad
 # Jupyter Lab 系
 .ipynb_checkpoints
 
