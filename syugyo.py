@@ -12,7 +12,7 @@ parser.add_argument('-sv', '--squad_version', choices=[1.1, 2.0], type=float,
 if __name__ == "__main__":
     args = parser.parse_args()
     bidaf_model = BidirectionalAttentionFlow(400)
-    #bidaf_model.load_bidaf("bidaf/data/models/model_.h5") # when you want to resume training
-    train_generator, validation_generator = load_data_generators(24, 400, squad_version=args.squad_version)
+    bidaf_model.load_bidaf("bidaf/data/tmp/bidaf_06.h5") # when you want to resume training
+    train_generator, validation_generator = load_data_generators(20, 400, squad_version=args.squad_version)
     keras_model = bidaf_model.train_model(train_generator, validation_generator=validation_generator
-                                            , workers=3, use_multiprocessing=True, epochs=1, initial_epoch=0)
+                                        , workers=1, use_multiprocessing=True, epochs=1, initial_epoch=0)

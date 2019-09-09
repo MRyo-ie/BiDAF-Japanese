@@ -94,7 +94,9 @@ What space station supported three manned missions in 1973–1974?
   ```
   $ python3 setup.py -sv=2.0
   ```
-- オプションで `-l`：`do_lowercase`
+- オプションで
+  - `-l`：`do_lowercase`
+  - ` > bidaf/data/tmp/log.txt`
 
 ## Python インタプリタ で実行
 ```
@@ -110,6 +112,15 @@ train_generator, validation_generator = load_data_generators(24, 400)
 keras_model = bidaf_model.train_model(train_generator, validation_generator=validation_generator)
 ```
 
+## スクリプト で実行
+```
+python3 syugyo.py -sv=2.0
+```
+- オプションで
+  - `-l`：`do_lowercase`
+  - ログを撮りたい場合
+    - 標準出力 ： ` > bidaf/data/tmp/log.txt`
+    - エラー出力 ： ` 2> bidaf/data/tmp/log_err.txt`
 
 
 # その他ログ
