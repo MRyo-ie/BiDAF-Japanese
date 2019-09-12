@@ -13,7 +13,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     bidaf_model = BidirectionalAttentionFlow(400)
     #bidaf_model.load_bidaf("bidaf/data/tmp/bidaf_06.h5") # when you want to resume training
-    train_generator, validation_generator = load_data_generators(5, 400, squad_version=args.squad_version, div_epoch_num=50)
+    train_generator, validation_generator = load_data_generators(8, 400, squad_version=args.squad_version, div_epoch_num=20)
     """
     引数
     ・initial_epoch ： epoch の開始番号（続きからやる場合は、bidaf_n.h5 の n を入れる。）
