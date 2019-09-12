@@ -6,22 +6,24 @@ conda, pyenv など、仮想環境に入るのを忘れない！
 ```
 $ cndac_BiDAF_test
 ```
-1. keras, tensorflow をインストール
+
+1. pip 関連
     ```
-    pip uninstall tensorflow
-    pip uninstall tensorflow-gpu
-    pip install tensorflow-gpu==1.13.2
-    pip install keras 
+    pip install -r _settings/requirements.txt  
     ```
+1. (GPUが動いてないっぽい場合)
    - 確認
       ```
       $ python3
       from tensorflow.python.client import device_lib
       device_lib.list_local_devices()
       ```
-2. pip 関連
+   - keras, tensorflow を再インストール
     ```
-    pip install -r _settings/requirements.txt  
+    pip uninstall tensorflow
+    pip uninstall tensorflow-gpu
+    pip install tensorflow-gpu==1.13.2
+    pip install keras 
     ```
 
 
