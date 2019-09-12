@@ -94,8 +94,9 @@ class BidirectionalAttentionFlow():
 
         self.model = load_model(path, custom_objects=custom_objects)
 
-    def train_model(self, train_generator, steps_per_epoch=None, epochs=1, validation_generator=None,
-                    validation_steps=None, workers=1, use_multiprocessing=True, shuffle=True, initial_epoch=0,
+    def train_model(self, train_generator, validation_generator=None, validation_steps=None, 
+                    steps_per_epoch=None, initial_epoch=0, epochs=1,
+                    workers=1, use_multiprocessing=True, shuffle=True, 
                     save_history=True, save_model_per_epoch=True):
 
         # _settings/BiDAF.cfg  から デフォルト設定を読み込み
@@ -108,7 +109,7 @@ class BidirectionalAttentionFlow():
         if not os.path.exists(saved_tmp_dir):
             os.makedirs(saved_tmp_dir)
 
-        # 学習開始
+        ### 学習準備
         callbacks = []
 
         if save_history:
@@ -117,8 +118,8 @@ class BidirectionalAttentionFlow():
             callbacks.append(csv_logger)
 
         if save_model_per_epoch:
-            save_model_file = os.path.join(saved_tmp_dir, 'bidaf_{epoch:02d}.h5')
-            checkpointer = ModelCheckpoint(filepath=save_model_file, verbose=1)
+            model_file_path = os.path.join(saved_tmp_dir, 'bidaf_{epoch:02d}.h5')
+            checkpointer = ModelCheckpoint(filepath=model_file_path, verbose=1)
             callbacks.append(checkpointer)
 
         history = self.model.fit_generator(train_generator, steps_per_epoch=steps_per_epoch, epochs=epochs,
