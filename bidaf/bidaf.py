@@ -112,6 +112,26 @@ class BidirectionalAttentionFlow():
         ### 学習準備
         callbacks = []
 
+        ### add for TensorBoard
+        import keras.callbacks
+        import keras.backend.tensorflow_backend as KTF
+        import tensorflow as tf
+
+        # old_session = KTF.get_session()
+
+        # session = tf.Session('')
+        # KTF.set_session(session)
+        # KTF.set_learning_phase(1)
+        tb_cb = keras.callbacks.TensorBoard(
+                        log_dir="bidaf/data/tmp/tf_log/",
+                        histogram_freq=1,
+                        write_grads=True,
+                        write_images=1,
+                        embeddings_freq=1,
+                    )
+        callbacks.append(tb_cb)
+        ###
+
         if save_history:
             history_file = os.path.join(saved_tmp_dir, 'history')
             csv_logger = CSVLogger(history_file, append=True)

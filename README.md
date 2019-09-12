@@ -124,4 +124,14 @@ python3 syugyo.py -sv=2.0
     - 標準出力 ： ` > bidaf/data/tmp/log.txt`
     - エラー出力 ： ` 2> bidaf/data/tmp/log_err.txt`
 
+## Tensorboard
+### サーバー側
+```
+tensorboard --logdir=【logディレクトリのパス】  --port 【ポート番号】
+```
+### クライアント側
+```
+ssh -L 8765:localhost:【ポート番号】  【sshホスト】
+```
+http://localhost:8765/
 
