@@ -6,7 +6,7 @@ import json
 import numpy as np
 from tqdm import tqdm
 from six.moves.urllib.request import urlretrieve
-from ..layer_embedding import tokenize
+from . import tokenize
 
 random.seed(42)
 np.random.seed(42)

@@ -1,15 +1,10 @@
 from keras.layers import Input, TimeDistributed, LSTM, Bidirectional
 from keras.models import Model, load_model
 from keras.optimizers import Adadelta
-from keras.callbacks import CSVLogger, ModelCheckpoint
 from .layers import Highway, Similarity, C2QAttention, Q2CAttention, MergedContext, SpanBegin, SpanEnd, CombineOutputs
-from .scripts import negative_avg_log_error, accuracy, MagnitudeVectors, get_best_span, get_word_char_loc_mapping
+from .scripts import negative_avg_log_error, accuracy
 from .scripts import ModelMGPU
 from .scripts.utils import limit_GPU_memory_size
-from .layer_embedding import tokenize
-
-import configparser
-import os
 
 
 class BidirectionalAttentionFlow():
@@ -17,7 +12,6 @@ class BidirectionalAttentionFlow():
     def __init__(self, emdim, max_passage_length=None, max_query_length=None, num_highway_layers=2, num_decoders=1,
                  encoder_dropout=0, decoder_dropout=0):
         # GPU メモリの使用料を制限する
-        # 最小限のGPUメモリのみ確保
         #limit_GPU_memory_size(70)
 
         # モデルを構築
@@ -94,162 +88,3 @@ class BidirectionalAttentionFlow():
 
         self.model = load_model(path, custom_objects=custom_objects)
 
-    def train_model(self, train_generator, validation_generator=None, validation_steps=None, 
-                    steps_per_epoch=None, initial_epoch=0, epochs=1,
-                    workers=1, use_multiprocessing=True, shuffle=True, 
-                    save_history=True, save_model_per_epoch=True):
-
-        # _settings/BiDAF.cfg  から デフォルト設定を読み込み
-        # (未) Windows や他の OS のパス形式に対応させる必要あり。
-        inifile = configparser.ConfigParser()
-        inifile.read(os.path.join('_settings', 'BiDAF.cfg'), 'UTF-8')
-        print(inifile)
-        saved_model_dir = inifile.get('data', 'model_dir_path')
-        saved_tmp_dir = os.path.join(saved_model_dir, os.pardir, 'tmp')
-        if not os.path.exists(saved_tmp_dir):
-            os.makedirs(saved_tmp_dir)
-
-        ### 学習準備
-        callbacks = []
-
-        ### add for TensorBoard
-        import keras.callbacks
-        import keras.backend.tensorflow_backend as KTF
-        import tensorflow as tf
-
-        # old_session = KTF.get_session()
-
-        # session = tf.Session('')
-        # KTF.set_session(session)
-        # KTF.set_learning_phase(1)
-        tb_cb = keras.callbacks.TensorBoard(
-                        log_dir="bidaf/data/tmp/tf_log/",
-                        histogram_freq=1,
-                        write_grads=True,
-                        write_images=1,
-                        embeddings_freq=1,
-                    )
-        callbacks.append(tb_cb)
-        ###
-
-        if save_history:
-            history_file = os.path.join(saved_tmp_dir, 'history')
-            csv_logger = CSVLogger(history_file, append=True)
-            callbacks.append(csv_logger)
-
-        if save_model_per_epoch:
-            model_file_path = os.path.join(saved_tmp_dir, 'bidaf_{epoch:02d}.h5')
-            checkpointer = ModelCheckpoint(filepath=model_file_path, verbose=1)
-            callbacks.append(checkpointer)
-
-        history = self.model.fit_generator(train_generator, steps_per_epoch=steps_per_epoch, epochs=epochs,
-                                           callbacks=callbacks, validation_data=validation_generator,
-                                           validation_steps=validation_steps, workers=workers,
-                                           use_multiprocessing=use_multiprocessing, shuffle=shuffle,
-                                           initial_epoch=initial_epoch)
-        if not save_model_per_epoch:
-            self.model.save(os.path.join(saved_model_dir, 'bidaf.h5'))
-
-        return history, self.model
-
-    def predict_ans(self, passage, question, squad_version=1.1, max_span_length=25, do_lowercase=True,
-                    return_char_loc=False, return_confidence_score=False):
-
-        if type(passage) == list:
-            assert all(type(pas) == str for pas in passage), "Input 'passage' must be of type 'string'"
-
-            passage = [pas.strip() for pas in passage]
-            contexts = []
-            for pas in passage:
-                context_tokens = tokenize(pas, do_lowercase)
-                contexts.append(context_tokens)
-
-            if do_lowercase:
-                original_passage = [pas.lower() for pas in passage]
-            else:
-                original_passage = passage
-
-        elif type(passage) == str:
-            passage = passage.strip()
-            context_tokens = tokenize(passage, do_lowercase)
-            contexts = [context_tokens, ]
-
-            if do_lowercase:
-                original_passage = [passage.lower(), ]
-            else:
-                original_passage = [passage, ]
-
-        else:
-            raise TypeError("Input 'passage' must be either a 'string' or 'list of strings'")
-
-        assert type(passage) == type(
-            question), "Both 'passage' and 'question' must be either 'string' or a 'list of strings'"
-
-        if type(question) == list:
-            assert all(type(ques) == str for ques in question), "Input 'question' must be of type 'string'"
-            assert len(passage) == len(
-                question), "Both lists (passage and question) must contain same number of elements"
-
-            questions = []
-            for ques in question:
-                question_tokens = tokenize(ques, do_lowercase)
-                questions.append(question_tokens)
-
-        elif type(question) == str:
-            question_tokens = tokenize(question, do_lowercase)
-            questions = [question_tokens, ]
-
-        else:
-            raise TypeError("Input 'question' must be either a 'string' or 'list of strings'")
-
-        vectors = MagnitudeVectors(self.emdim).load_vectors()
-        context_batch = vectors.query(contexts, self.max_passage_length)
-        question_batch = vectors.query(questions, self.max_query_length)
-
-        y = self.model.predict([context_batch, question_batch])
-        y_pred_start = y[:, 0, :]
-        y_pred_end = y[:, 1, :]
-
-        # clearing the session releases memory by removing the model from memory
-        # using this, you will need to load model every time before prediction
-        # K.clear_session()
-
-        batch_answer_span = []
-        batch_confidence_score = []
-        for sample_id in range(len(contexts)):
-            answer_span, confidence_score = get_best_span(y_pred_start[sample_id, :], y_pred_end[sample_id, :],
-                                                          len(contexts[sample_id]), squad_version, max_span_length)
-            batch_answer_span.append(answer_span)
-            batch_confidence_score.append(confidence_score)
-
-        answers = []
-        for index, answer_span in enumerate(batch_answer_span):
-            context_tokens = contexts[index]
-            start, end = answer_span[0], answer_span[1]
-
-            # word index to character index mapping
-            mapping = get_word_char_loc_mapping(original_passage[index], context_tokens)
-
-            char_loc_start = mapping[start]
-            # [1] => char_loc_end is set to point to one more character after the answer
-            char_loc_end = mapping[end] + len(context_tokens[end])
-            # [1] will help us getting a perfect slice without unnecessary increments/decrements
-            ans = original_passage[index][char_loc_start:char_loc_end]
-
-            return_dict = {
-                "answer": ans,
-            }
-
-            if return_char_loc:
-                return_dict["char_loc_start"] = char_loc_start
-                return_dict["char_loc_end"] = char_loc_end - 1
-
-            if return_confidence_score:
-                return_dict["confidence_score"] = batch_confidence_score[index]
-
-            answers.append(return_dict)
-
-        if type(passage) == list:
-            return answers
-        else:
-            return answers[0]

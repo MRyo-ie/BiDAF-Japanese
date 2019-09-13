@@ -1,9 +1,8 @@
 # bidaf-keras/bidaf/__main__.py  から、SQuADのダウンロード部分を切り出した。
-from bidaf.env_setup import data_download_and_preprocess
+from bidaf.tasks.squad import data_download_and_preprocess
 
 import argparse
 import sys
-
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-sv', '--squad_version', choices=[1.1, 2.0], type=float,
                     action='store', default=1.1, help='SQuAD dataset version')
