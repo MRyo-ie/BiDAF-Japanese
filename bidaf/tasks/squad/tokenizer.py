@@ -1,6 +1,5 @@
 import nltk
 
-
 nltk.download('punkt')
 
 def tokenize(sequence, do_lowercase):

@@ -8,6 +8,17 @@ import configparser
 import os
 
 
+# Drive のパスを読み込み： _settings/BiDAF.cfg  から デフォルト設定を読み込み
+cfg = configparser.ConfigParser()
+cfg.read(os.path.join('_settings', 'BiDAF.cfg'), 'UTF-8')
+# dict(cfg.items('Drive'))
+base_dir_path = cfg.get('Drive', 'base_path').split('/')
+saved_wordDB_dir_name_dir = os.path.join( *(base_dir_path +[cfg.get('Drive', 'wordDB_dir_name')]) )
+saved_weight_dir = os.path.join( *(base_dir_path +[cfg.get('Drive', 'weights_dir_name')]) )
+if not os.path.exists(saved_weight_dir):
+    os.makedirs(saved_weight_dir)
+
+
 # 学習のテンプレート
 def train_model(bidaf: BidirectionalAttentionFlow,
                 train_generator, validation_generator=None, validation_steps=None, 
@@ -15,26 +26,11 @@ def train_model(bidaf: BidirectionalAttentionFlow,
                 workers=1, use_multiprocessing=True, shuffle=True, 
                 save_history=True, save_model_per_epoch=True):
 
-    # _settings/BiDAF.cfg  から デフォルト設定を読み込み
-    # (未) Windows や他の OS のパス形式に対応させる必要あり。
-    inifile = configparser.ConfigParser()
-    inifile.read(os.path.join('_settings', 'BiDAF.cfg'), 'UTF-8')
-    print(inifile)
-    saved_model_dir = inifile.get('data', 'model_dir_path')
-    saved_tmp_dir = os.path.join(saved_model_dir, os.pardir, 'tmp')
-    if not os.path.exists(saved_tmp_dir):
-        os.makedirs(saved_tmp_dir)
-
     ### 学習準備（collbackの用意）
     callbacks = []
 
-    # old_session = KTF.get_session()
-
-    # session = tf.Session('')
-    # KTF.set_session(session)
-    # KTF.set_learning_phase(1)
     tb_cb = TensorBoard(
-                log_dir="bidaf/data/tmp/tf_log/",
+                log_dir="bidaf/Logs/tf_log/",
                 histogram_freq=0,
                 write_grads=True,
                 write_images=1,
@@ -43,12 +39,12 @@ def train_model(bidaf: BidirectionalAttentionFlow,
     callbacks.append(tb_cb)
 
     if save_history:
-        history_file = os.path.join(saved_tmp_dir, 'history')
+        history_file = os.path.join(saved_weight_dir, 'history')
         csv_logger = CSVLogger(history_file, append=True)
         callbacks.append(csv_logger)
 
     if save_model_per_epoch:
-        model_file_path = os.path.join(saved_tmp_dir, 'bidaf_{epoch:02d}.h5')
+        model_file_path = os.path.join(saved_weight_dir, 'bidaf_{epoch:02d}.h5')
         checkpointer = ModelCheckpoint(filepath=model_file_path, verbose=1)
         callbacks.append(checkpointer)
 
@@ -58,7 +54,7 @@ def train_model(bidaf: BidirectionalAttentionFlow,
                                         use_multiprocessing=use_multiprocessing, shuffle=shuffle,
                                         initial_epoch=initial_epoch)
     if not save_model_per_epoch:
-        bidaf.model.save(os.path.join(saved_model_dir, 'bidaf.h5'))
+        bidaf.model.save(os.path.join(saved_weight_dir, 'bidaf.h5'))
 
     return history, bidaf.model
 

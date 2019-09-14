@@ -10,7 +10,7 @@ class BatchGenerator(Sequence):
     vectors = None
 
     def __init__(self, gen_type, batch_size, emdim, squad_version, max_passage_length, max_query_length, shuffle, div_epoch_num=1):
-        base_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'data')
+        base_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'Drive')
 
         self.vectors = MagnitudeVectors(emdim).load_vectors()
         self.squad_version = squad_version

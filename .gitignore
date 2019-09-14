@@ -166,10 +166,9 @@ dmypy.json
 (org)bidaf-keras
 .git/
 # サイズの大きいデータの保管場所
-bidaf/data/magnitude/
-bidaf/data/models/*.h5
-bidaf/data/squad
-bidaf/data/tmp
+bidaf/Drive/
+bidaf/Logs/
+bidaf/tasks/*/tmp/
 # Jupyter Lab 系
 .ipynb_checkpoints
 
