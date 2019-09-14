@@ -1,2 +1,2 @@
-from .build import build_squad
+from .build import build_ja_QA
 from .tokenizer import tokenize

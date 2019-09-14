@@ -2,7 +2,7 @@ import os
 import numpy as np
 from tqdm import tqdm
 from six.moves.urllib.request import urlretrieve
-from ..tokenizer import tokenize_Japanese as tokenize
+from .tokenizer import tokenize
 
 
 def write_to_file(out_file, line):

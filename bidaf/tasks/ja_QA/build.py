@@ -16,7 +16,7 @@ def data_from_json(filename):
     return data
 
 
-def data_download_and_preprocess(squad_version=1.1, do_lowercase=True):
+def build_ja_QA():
     # SQuAD クラスをインスタンス化
     preSQuAD = PreprocessSQuAD()
 

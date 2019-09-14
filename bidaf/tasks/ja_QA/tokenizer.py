@@ -1,6 +1,6 @@
 
 
-def tokenize_Japanese(sequence):
+def tokenize(sequence):
     """
     日本語の Tokenizer
     ・ Sentence Piece
