@@ -1,2 +1,2 @@
-from .build import build_squad
+from .squad_builder import SQuAD_Data, SQuAD_Builder
 from .tokenizer import tokenize
