@@ -77,8 +77,8 @@ class SQuAD_Builder(TaskBuilder):
     def is_there_is_impossible(self):
         return self._is_there_is_impossible
     # 出力ファイルの base name
-    def outf_base_name(self, tier):
-        return os.path.join('{}-v{}'.format(tier, self.squad_v))
+    def buildf_base_name(self, tier):
+        return '{}-v{}'.format(tier, self.squad_v)
 
     # @override
     def exec_preprocess(self, tier)->list:

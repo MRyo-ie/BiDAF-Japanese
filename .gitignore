@@ -169,6 +169,7 @@ dmypy.json
 bidaf/Drive/
 bidaf/Logs/
 bidaf/tasks/*/tmp/
+WikiExtractor.py
 # Jupyter Lab 系
 .ipynb_checkpoints
 

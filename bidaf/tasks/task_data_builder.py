@@ -115,11 +115,15 @@ class TaskBuilder(metaclass = abc.ABCMeta):
         self.task_d: TaskData = task_data
         np.random.seed(42)
 
-    @abc.abstractproperty  # getter： 「回答可能か」のフラグも問題に含むか :bool
+    @abc.abstractproperty
     def is_there_is_impossible(self):
+        """getter： 「回答可能か」のフラグも問題に含むか :bool"""
         pass
-    @abc.abstractmethod  # getter： 出力ファイル名 :str
-    def outf_base_name(self, tier:str)->str:
+    @abc.abstractmethod
+    def buildf_base_name(self, tier: str) -> str:
+        """ << getter >>  : str
+        出力ファイル名のテンプレート。 
+        SQuAD だと 'train-v2.0 """
         pass
 
     # これだけ実行。
@@ -134,14 +138,14 @@ class TaskBuilder(metaclass = abc.ABCMeta):
         を、それぞれのファイルに保存する。
         """
         # Train
-        train_fname = self.outf_base_name('train')
+        train_fname = self.buildf_base_name('train')
         if self.is_already_preprocessed(train_fname + '.span'):  # すでに終わってる場合は飛ばす。
             print('[確認] {} は、すでに build 済みです。'.format(train_fname))
         else:
             builded_data = self.exec_preprocess('train')
             self.exec_write(builded_data, train_fname)
         # Val
-        val_fname = self.outf_base_name('val')
+        val_fname = self.buildf_base_name('val')
         if self.is_already_preprocessed(val_fname + '.span'):  # すでに終わってる場合は飛ばす。
             print('[確認] {} は、すでに build 済みです。'.format(val_fname))
         else:
@@ -176,6 +180,7 @@ class TaskBuilder(metaclass = abc.ABCMeta):
         current_token_idx = 0  # current word loc
         mapping = dict()
 
+        # 未知語の扱いは？
         # step through original characters
         for char_idx, char in enumerate(context):
             if char != u' ' and char != u'\n':  # if it's not a space:
