@@ -8,9 +8,8 @@ from six.moves.urllib.request import urlretrieve
 
 ###   「タスクを Build するために必要な情報」の抽象クラス  ###
 class TaskData(metaclass=abc.ABCMeta):
-    @abc.abstractproperty  # getter： tmp ディレクトリのパス
-    def local_dirpath(self):
-        pass
+    def __init__(self, local_dirpath):
+        self.local_dirpath = local_dirpath
 
     @abc.abstractproperty  # getter： train のファイル名
     def train_fname(self):
@@ -50,21 +49,19 @@ class TaskData(metaclass=abc.ABCMeta):
                     self.total = tsize
                 self.update(b * bsize - self.n)
 
-        #local_fname = None
         filename = dl_URL.split('/')[-1]
         if not os.path.exists(local_fpath):
             try:
                 if show_progress:
-                    print("[・・]  {} をダウンロード中...".format(dl_URL))
+                    print("[・・]  {} をダウンロード中...".format(filename))
                     # Download with a progress bar
                     with DownloadProgressBar(unit='B', unit_scale=True,
                                             miniters=1, desc=filename) as t:
-                        local_fname, _ = urlretrieve(dl_URL,
-                                                        filename=local_fpath,
-                                                        reporthook=t.update_to)
+                        urlretrieve(dl_URL, filename=local_fpath,
+                                    reporthook=t.update_to)
                 else:
                     # Simple download with no progress bar
-                    local_fname, _ = urlretrieve(dl_URL, filename=local_fpath)
+                    urlretrieve(dl_URL, filename=local_fpath)
 
                 print("[ OK ] File {} の ダウンロードが 完了しました！\n".format(filename))
             except AttributeError as e:
@@ -74,6 +71,7 @@ class TaskData(metaclass=abc.ABCMeta):
                 if os.path.exists( local_fpath ):
                     os.remove( local_fpath )
                 raise k
+        return None
 
 
     @abc.abstractmethod
@@ -88,22 +86,22 @@ class TaskData(metaclass=abc.ABCMeta):
         """
         with open(local_fpath) as f:
             data = json.load(f)
-        print("[確認] データの総数 ： ", self.total_examples(data))
+        # print("[確認] データの総数 ： ", self.total_examples(data))
         return data
 
 
-    @abc.abstractmethod
-    def total_examples(self, dataset):
-        """Returns the total number of (context, question, answer) triples, given the data loaded from the SQuAD json file"""
-        # squad の場合↓
-        '''
-        total = 0
-        for article in dataset['data']:
-            for para in article['paragraphs']:
-                total += len(para['qas'])
-        return total
-        '''
-        pass
+    # @abc.abstractmethod
+    # def total_examples(self, dataset):
+    #     """Returns the total number of (context, question, answer) triples, given the data loaded from the SQuAD json file"""
+    #     # squad の場合↓
+    #     '''
+    #     total = 0
+    #     for article in dataset['data']:
+    #         for para in article['paragraphs']:
+    #             total += len(para['qas'])
+    #     return total
+    #     '''
+    #     pass
 
 
 ######################
@@ -115,6 +113,7 @@ class TaskBuilder(metaclass = abc.ABCMeta):
 
     def __init__(self, task_data):
         self.task_d: TaskData = task_data
+        np.random.seed(42)
 
     @abc.abstractproperty  # getter： 「回答可能か」のフラグも問題に含むか :bool
     def is_there_is_impossible(self):
@@ -136,14 +135,14 @@ class TaskBuilder(metaclass = abc.ABCMeta):
         """
         # Train
         train_fname = self.outf_base_name('train')
-        if self.is_already_preprocessed(train_fname):
+        if self.is_already_preprocessed(train_fname + '.span'):  # すでに終わってる場合は飛ばす。
             print('[確認] {} は、すでに build 済みです。'.format(train_fname))
         else:
             builded_data = self.exec_preprocess('train')
             self.exec_write(builded_data, train_fname)
         # Val
         val_fname = self.outf_base_name('val')
-        if self.is_already_preprocessed(val_fname):
+        if self.is_already_preprocessed(val_fname + '.span'):  # すでに終わってる場合は飛ばす。
             print('[確認] {} は、すでに build 済みです。'.format(val_fname))
         else:
             builded_data = self.exec_preprocess('val')

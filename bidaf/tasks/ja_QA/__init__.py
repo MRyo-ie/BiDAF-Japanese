@@ -1,2 +1,2 @@
-from .build import build_ja_QA
+from .ja_qa_builder import JaQA_Data, JaQA_Builder
 from .tokenizer import tokenize

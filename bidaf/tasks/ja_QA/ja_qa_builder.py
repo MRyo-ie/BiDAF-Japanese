@@ -1,25 +1,30 @@
-import os
+import gzip
+import json
+import os, sys
 import numpy as np
-from tqdm import tqdm
 from six.moves.urllib.request import urlretrieve
+from tqdm import tqdm
 from .tokenizer import tokenize
 from ..task_data_builder import TaskBuilder, TaskData
 
 
-class SQuAD_Data(TaskData):
-    def __init__(self, local_dirpath, squad_version):
+class JaQA_Data(TaskData):
+    def __init__(self, local_dirpath):
         super().__init__(local_dirpath)
-        self.squad_v = squad_version
-        self.download_base_url = "https://rajpurkar.github.io/SQuAD-explorer/dataset/"
+        self.download_base_url = "http://www.cl.ecei.tohoku.ac.jp/rcqa/data/all-v1.0.json.gz"
+        gz_fname = self.download_base_url.split('/')[-1]
+        self.gz_fpath = os.path.join(self.local_dirpath, gz_fname)
 
-        self._train_fname = "train-v{}.json".format(self.squad_v)
-        self._val_fname = "dev-v{}.json".format(self.squad_v)
+        self._train_fname = "train.json"
+        self._val_fname = "val.json"
 
         self.train_fpath = os.path.join(self.local_dirpath, self._train_fname)
         self.val_fpath = os.path.join(self.local_dirpath, self._val_fname)
-
-        self._train_data = None
-        self._val_data = None
+        
+        self.val_rate = 0.2  #valのデータ数の割合 → 20%
+        self._train_data = []
+        self._val_data = []
+        np.random.seed(42)
 
     @property
     def train_fname(self):
@@ -37,41 +42,56 @@ class SQuAD_Data(TaskData):
 
     # @override
     def download_data(self, show_progress=True):
-        # Train
-        dl_URL = self.download_base_url + self.train_fname
-        self.exec_download(dl_URL, self.train_fpath)
-        # Val
-        dl_URL = self.download_base_url + self.val_fname
-        self.exec_download(dl_URL, self.val_fpath)
+        # Orizinal gz
+        self.exec_download(self.download_base_url, self.gz_fpath)
 
     def load_data(self):
         """ 2. trainデータ と valデータに分割（-> json x2）: divide_data() """
-        # Train
-        self._train_data = self.exec_load_json(self.train_fpath)
-        # Val
-        self._val_data = self.exec_load_json(self.val_fpath)
+        # .json.gz を解凍
+        with gzip.open(self.gz_fpath, 'rb') as in_f, \
+                open(self.train_fpath, 'wb') as train_f, \
+                open(self.val_fpath, 'wb') as val_f:
 
-    # # @override
-    # def total_examples(self, dataset):
-    #     """Returns the total number of (context, question, answer) triples, given the data loaded from the SQuAD json file"""
-    #     total = 0
-    #     for article in dataset['data']:
-    #         for para in article['paragraphs']:
-    #             total += len(para['qas'])
-    #     return total
+            # train : val = 8 : 2 くらいで。
+            data_lines = in_f.readlines()
+            # シャッフル
+            #d_num = len(in_f)  # ← gzip は len がないらしい...。
+            d_num = len(data_lines)
+            indices = list(range(d_num))  # valに割り当てる番号
+            np.random.shuffle(indices)
+            val_num = int(d_num * self.val_rate)  # 20% を val にする。比率：self.val_rate
+            indices = indices[:val_num]
+
+            json_d = None
+            for i, line in enumerate(data_lines):
+                json_d = json.loads(line)
+                if i in indices:
+                    # Val
+                    val_f.write(line)
+                    self._val_data.append(json_d)
+                else:
+                    # Train
+                    train_f.write(line)
+                    self._train_data.append(json_d)
+            
+        print('    _train_data の要素数 : {}'.format(len(self._train_data)))
+        print('    _val_data   の要素数 : {}'.format(len(self._val_data)))
+
+    # @override
+    def total_examples(self, dataset):
+        # exec_load_json() を使わないなら、実装しなくてOK
+        pass
 
 
 ######################
 ######################
 
 
-class SQuAD_Builder(TaskBuilder):
-    def __init__(self, task_d: SQuAD_Data, squad_version, do_lowercase):
+class JaQA_Builder(TaskBuilder):
+    def __init__(self, task_d: JaQA_Data):
         super().__init__(task_d)
-        self.squad_v = squad_version
-        self.do_lowercase = do_lowercase
         # 「回答可能か」のフラグもデータに含まれている場合。
-        self._is_there_is_impossible = (self.squad_v == 2.0)
+        self._is_there_is_impossible = True
 
     @property
     def is_there_is_impossible(self):

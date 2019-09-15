@@ -1,8 +1,6 @@
 """Downloads SQuAD train and dev sets, preprocesses and writes tokenized versions to file"""
 
 import os
-#from .ja_qa.ja_ga_builder import JaQA_Builder
-from .squad.squad_builder import SQuAD_Data, SQuAD_Builder
 from .task_data_builder import TaskData, TaskBuilder
 
 
@@ -18,13 +16,15 @@ def build(task: str, opts: OptionValues):
     task_data:TaskData = None
     task_builder:TaskBuilder = None
     if task == 'squad':
+        from .squad.squad_builder import SQuAD_Data, SQuAD_Builder
         task_data = SQuAD_Data(opts.data_dir, opts.squad_version)
         task_builder = SQuAD_Builder(task_data, opts.squad_version, opts.do_lowercase)
     elif task == 'ja_qa':
-        task_data = SQuAD_Data(opts.data_dir, opts.squad_version)
+        from .ja_QA.ja_qa_builder import JaQA_Data, JaQA_Builder
+        task_data = JaQA_Data(opts.data_dir)
         task_builder = JaQA_Builder(task_data)
 
-    print('[確認] 出力ディレクトリ： ', opts.data_dir)
+    print('\n[確認] 出力 dir ： ', opts.data_dir)
     if not os.path.exists(opts.data_dir):
         os.makedirs(opts.data_dir)
 
@@ -49,5 +49,5 @@ def build(task: str, opts: OptionValues):
     '''
     # preprocess train set and write to file
     task_builder.preprocess_data()
-    print("[finish] data preprocessed!")
+    print("\n[finish] data preprocessed!")
 
