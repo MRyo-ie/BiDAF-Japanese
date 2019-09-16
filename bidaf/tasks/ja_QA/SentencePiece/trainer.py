@@ -37,7 +37,7 @@ class SentencePieceTrainer():
         before = os.path.abspath('__file__')
         after = os.path.split(before)[0]
         while after != before:
-            print(after)
+            #print(after)
             before = after
             after = os.path.split(before)[0]
         return after
@@ -51,7 +51,7 @@ class SentencePieceTrainer():
 
     def train(self):
         files = self._get_text_file()
-        command = f'--input="{files}" --model_prefix={self.prefix} --vocab_size={self.vocab_size}'
+        command = f'--input={files} --model_prefix={self.prefix} --vocab_size={self.vocab_size}'
         #print('    (SPTrainer)  command : ', command)
         sp.SentencePieceTrainer.Train(command)
         if self.is_space_in_path:
