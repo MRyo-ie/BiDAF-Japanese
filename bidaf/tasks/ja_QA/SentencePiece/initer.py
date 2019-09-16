@@ -26,10 +26,9 @@ class SentencePieceIniter():
             self.wiki_tmppath = os.path.join(self.current_dir, 'tmp')  # tmp/
             self.wiki_filepath = os.path.join(self.wiki_tmppath, self.wiki_dump_URL.split('/')[-1])  # tmp/jawiki-latest-pages-articles-multistream.xml.bz2
             self.wiki_extpath = os.path.join(self.wiki_tmppath, 'out')  # tmp/out/
-            self.wiki_glob_path = os.path.join(self.wiki_extpath, '**', "wiki_*")
             if not os.path.exists(self.wiki_tmppath):
                 os.mkdir(self.wiki_tmppath)
-            self.sp_trainer = SentencePieceTrainer(config, self.wiki_glob_path, model_dir_abspath)
+            self.sp_trainer = SentencePieceTrainer(config, self.wiki_extpath, model_dir_abspath)
             # 学習開始
             self.setup_SP()
         else:
@@ -46,7 +45,7 @@ class SentencePieceIniter():
         ### 分解
         if not os.path.exists(self.wiki_extpath):
             os.mkdir(self.wiki_extpath)
-        if len(glob.glob(self.wiki_glob_path)) < 4:  # なければ、分解を実行。
+        if len(glob.glob(os.path.join(self.wiki_extpath, '**', "wiki_*"))) < 4:  # なければ、分解を実行。
             self.extract()
         print('[確認](SP_Initer)  Wikipediaデータのextractを確認しました！')
 
