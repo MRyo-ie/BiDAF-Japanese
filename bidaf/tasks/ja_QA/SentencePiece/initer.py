@@ -20,11 +20,12 @@ class SentencePieceIniter():
         self.wiki_tmppath = os.path.join(self.current_dir, 'tmp')  # tmp/
         self.wiki_filepath = os.path.join(self.wiki_tmppath, self.wiki_dump_URL.split('/')[-1])  # tmp/jawiki-latest-pages-articles-multistream.xml.bz2
         self.wiki_extpath = os.path.join(self.wiki_tmppath, 'out')  # tmp/out/
+        self.wiki_glob_path = os.path.join(self.wiki_extpath, '**', "wiki_*")
         if not os.path.exists(self.wiki_tmppath):
             os.mkdir(self.wiki_tmppath)
 
         self.model_dirpath = config['train']['model_dir']  #os.path.join(self.current_dir, 'model')
-        self.sp_trainer = SentencePieceTrainer(config, self.wiki_extpath)
+        self.sp_trainer = SentencePieceTrainer(config, self.wiki_glob_path)
 
 
     def download(self):
@@ -73,7 +74,7 @@ class SentencePieceIniter():
             print('    wikiExtract_logfile : ', wikiExtract_logfile)
             retcode = subprocess.call(['python3', self.wikiExtractor_py, self.wiki_filepath,
                                                     "-o={}".format(self.wiki_extpath),
-                                                    '-q',  '-b=500M', '--processes=4',
+                                                    '-q',  '-b=500M', '--processes=3',
                                                     "--log_file={}".format(wikiExtract_logfile)])
             print('[確認](SP_Initer)  retcode : ', retcode)
             if not retcode == 0:
@@ -96,8 +97,7 @@ class SentencePieceIniter():
         ### Wikipediaデータ を分解
         if not os.path.exists(self.wiki_extpath):
             os.mkdir(self.wiki_extpath)
-        wild_extf_path = os.path.join(self.wiki_extpath, "wiki_*")
-        if len(glob.glob(wild_extf_path)) < 2:  # なければ、分解を実行。
+        if len(glob.glob(self.wiki_glob_path)) < 4:  # なければ、分解を実行。
             self.extract()
         print('[確認](SP_Initer)  Wikipediaデータのextractを確認しました！')
 

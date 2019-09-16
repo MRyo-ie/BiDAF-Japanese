@@ -168,7 +168,7 @@ dmypy.json
 # サイズの大きいデータの保管場所
 bidaf/Drive/
 bidaf/Logs/
-bidaf/tasks/*/tmp/
+tmp/
 WikiExtractor.py
 # Jupyter Lab 系
 .ipynb_checkpoints
