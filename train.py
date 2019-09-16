@@ -14,6 +14,10 @@ parser.add_argument('-sv', '--squad_version', choices=[1.1, 2.0], type=float,
 parser.add_argument('-c', '--continue_epoch_num', type=int,
                     action='store', default=0, help='学習を続きから始める')
 
+parser.add_argument('-b', '--batch_size', type=int,
+                    action='store', default=8, help='バッチサイズを指定（8GBで7くらい、11GBで15くらい。）')
+parser.add_argument('-div', '--divide_epoch', type=int,
+                    action='store', default=50, help='1epoch をなん分割するかを指定（1epoch が長すぎるため。50くらい？）')
 
 
 # Train を実行。
@@ -45,7 +49,7 @@ if __name__ == "__main__":
         init_epoch = args.continue_epoch_num
         #print('     initial_epoch : ', init_epoch)
         bidaf_model.load_bidaf("{}/bidaf_{:02}.h5".format(saved_weight_path, init_epoch)) # when you want to resume training
-    train_generator, validation_generator = load_data_generators(8, 400, squad_version=args.squad_version, div_epoch_num=20)
+    train_generator, validation_generator = load_data_generators(args.batch_size, 400, squad_version=args.squad_version, div_epoch_num=args.divide_epoch)
     ## 学習実行
     keras_model = train_model(bidaf_model, train_paths, train_generator, validation_generator=validation_generator
                                         , workers=1, use_multiprocessing=True, initial_epoch=init_epoch, epochs=10)
