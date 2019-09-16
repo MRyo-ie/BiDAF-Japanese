@@ -53,7 +53,7 @@ class TaskData(metaclass=abc.ABCMeta):
         if not os.path.exists(local_fpath):
             try:
                 if show_progress:
-                    print("[・・]  {} をダウンロード中...".format(filename))
+                    print("[・・](task_data_builder.py)  {} をダウンロード中...".format(filename))
                     # Download with a progress bar
                     with DownloadProgressBar(unit='B', unit_scale=True,
                                             miniters=1, desc=filename) as t:
@@ -63,9 +63,9 @@ class TaskData(metaclass=abc.ABCMeta):
                     # Simple download with no progress bar
                     urlretrieve(dl_URL, filename=local_fpath)
 
-                print("[ OK ] File {} の ダウンロードが 完了しました！\n".format(filename))
+                print("[ OK ](task_data_builder.py) File {} の ダウンロードが 完了しました！\n".format(filename))
             except AttributeError as e:
-                print("[Error] An error occurred when downloading the file! Please get the dataset using a browser.")
+                print("[Error](task_data_builder.py) An error occurred when downloading the file! Please get the dataset using a browser.")
                 raise e
             except KeyboardInterrupt as k:
                 if os.path.exists( local_fpath ):
@@ -86,7 +86,7 @@ class TaskData(metaclass=abc.ABCMeta):
         """
         with open(local_fpath) as f:
             data = json.load(f)
-        # print("[確認] データの総数 ： ", self.total_examples(data))
+        # print("[確認](task_data_builder.py) データの総数 ： ", self.total_examples(data))
         return data
 
 

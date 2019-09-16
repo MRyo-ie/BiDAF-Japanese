@@ -76,8 +76,8 @@ class JaQA_Data(TaskData):
                     train_f.write(line)
                     self._train_data.append(json_d)
             
-        print('    _train_data の要素数 : {}'.format(len(self._train_data)))
-        print('    _val_data   の要素数 : {}'.format(len(self._val_data)))
+        print('      (JaQA_Data)    _train_data の要素数 : {}'.format(len(self._train_data)))
+        print('      (JaQA_Data)    _val_data   の要素数 : {}'.format(len(self._val_data)))
 
     # @override
     def total_examples(self, dataset):

@@ -2,13 +2,18 @@ import configparser
 import os
 
 class ConfigPathUtils():
-    def __init__(self, group, base_path_item='base_path'):
+    def __init__(self, group, root_dir, base_path_item='base_path'):
+        """
+        root_dir = os.path.dirname(os.path.abspath(__file__))
+        """
         # Drive のパスを読み込み： _settings/BiDAF.cfg  から デフォルト設定を読み込み
         self.cfg = configparser.ConfigParser()
         self.cfg.read(os.path.join('_settings', 'SavePaths.cfg'), 'UTF-8')
         #print(dict(self.cfg.items()))
         self.group = group
-        self.base_path = self._rebuild(base_path_item)
+        self.base_path = os.path.join( root_dir, self._rebuild(base_path_item) )
+        # print('    root_dir  : ', root_dir)
+        # print('    base_path : ', self.base_path )
 
     def _rebuild(self, path_item):
         """

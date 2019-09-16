@@ -26,7 +26,7 @@ class TokenizerSP():
     def is_already_SP_model_learned(self) -> bool:
         # モデルまで作成済み？
         file_list = glob.glob(self.model_dirpath+'/**/*.model') + glob.glob(self.model_dirpath+'/**/*.vocab')
-        print('[確認] SentencePiece のモデル : ', file_list)
+        print('[確認](TokenizerSP)  SentencePiece のモデル : ', file_list)
         # 2つ揃っている？
         return len(file_list) > 1
 

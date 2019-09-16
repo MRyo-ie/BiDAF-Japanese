@@ -1,4 +1,5 @@
 # bidaf-keras/bidaf/__main__.py  から、SQuADのダウンロード部分を切り出した。
+import os
 import sys
 from _settings.config_path_utils import ConfigPathUtils
 from bidaf.tasks.build import build, OptionValues
@@ -16,7 +17,8 @@ def main():
     args = parser.parse_args()
     task = args.mode.lower()
     # タスクデータ のパスを読み込み： _settings/SavePaths.cfg  から デフォルト設定を読み込み
-    cfg_path_builder = ConfigPathUtils(task)
+    root_dir = os.path.dirname(os.path.abspath(__file__))
+    cfg_path_builder = ConfigPathUtils(task, root_dir)
     task_data_path = cfg_path_builder.get_path('data_path')
 
     opts = OptionValues(task_data_path, args.squad_version, args.do_lowercase)

@@ -24,7 +24,7 @@ def build(task: str, opts: OptionValues):
         task_data = JaQA_Data(opts.data_dir)
         task_builder = JaQA_Builder(task_data)
 
-    print('\n[確認] 出力 dir ： ', opts.data_dir)
+    print('\n[確認](build.py) 出力 dir ： ', opts.data_dir)
     if not os.path.exists(opts.data_dir):
         os.makedirs(opts.data_dir)
 

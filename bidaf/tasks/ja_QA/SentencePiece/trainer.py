@@ -14,7 +14,7 @@ class SentencePieceTrainer():
         self.vocab_size = config['train']['vocab_size']
 
     def _get_text_file(self):
-        file_list = glob.glob(f'{self.wiki_dirpath}/**/*.txt')
+        file_list = glob.glob(f'{self.wiki_dirpath}/**/wiki_')
         files = ",".join(file_list)
         return files
 
