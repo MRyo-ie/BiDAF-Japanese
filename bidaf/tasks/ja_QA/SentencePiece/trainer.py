@@ -21,16 +21,17 @@ class SentencePieceTrainer():
         if self.is_space_in_path:
             print('[確認](SP_Trainer)  パスにスペースが入っていたため、回避処理を開始します。')
             os.path.splitdrive(os.path.abspath(__file__))
-            root_dir = os.path.join(self.get_root_path(), 'tmp', 'SentencePiece', 'out')
+            self.root_dir = os.path.join(self.get_root_path(), 'tmp', 'SentencePiece', 'out')
             # Wikipedia extractデータ をコピー
-            if os.path.exists(root_dir) and len(os.listdir(root_dir)) == 0:
-                os.rmdir(root_dir)
-            if not os.path.exists(root_dir):
-                shutil.copytree(wiki_extpath, root_dir)
-            self.wiki_glob_path = os.path.join(root_dir, '**', "wiki_*")
+            if os.path.exists(self.root_dir) and len(os.listdir(self.root_dir)) == 0:
+                os.rmdir(self.root_dir)
+            if not os.path.exists(self.root_dir):
+                shutil.copytree(wiki_extpath, self.root_dir)
+            self.wiki_glob_path = os.path.join(self.root_dir, '**', "wiki_*")
             # model ファイルは、通常の場所にもコピーする。という方向で。
-            self.prefix = os.path.join( root_dir, config.get('train', 'model_name') )
+            self.prefix = os.path.join( self.root_dir, config.get('train', 'model_name') )
             self.prefix_tmp = os.path.join( model_dir_abspath, config.get('train', 'model_name') )
+            print('[確認](SP_Trainer)  パス スペース問題　回避のためのコピー完了。')
 
 
     def get_root_path(self):
@@ -55,6 +56,7 @@ class SentencePieceTrainer():
         #print('    (SPTrainer)  command : ', command)
         sp.SentencePieceTrainer.Train(command)
         if self.is_space_in_path:
-            shutil.copytree(self.prefix, self.prefix_tmp)
+            shutil.copy(self.prefix+'.model', self.prefix_tmp+'.model')
+            shutil.copy(self.prefix+'.vocab', self.prefix_tmp+'.vocab')
             print('[確認](SP_Trainer)  {}\n        : {}'.format(self.prefix_tmp, os.listdir(self.prefix_tmp)))
 

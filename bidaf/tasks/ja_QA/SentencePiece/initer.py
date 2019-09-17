@@ -15,9 +15,9 @@ class SentencePieceIniter():
         self.current_dir = os.path.dirname(os.path.abspath(__file__))
         ### まだモデルを作れてない場合は、全自動で学習。
         model_dir_abspath = os.path.join(self.current_dir, *config.get('train', 'model_dir').split('/'))
-        model_fpath = os.path.join(model_dir_abspath, config['train']['model_name'] + '.model')
+        self.model_fpath = os.path.join(model_dir_abspath, config['train']['model_name'] + '.model')
         vocab_fpath = os.path.join(model_dir_abspath, config['train']['model_name']+'.vocab')
-        is_already_SP_model_learned = os.path.exists(model_fpath) and os.path.exists(vocab_fpath)
+        is_already_SP_model_learned = os.path.exists(self.model_fpath) and os.path.exists(vocab_fpath)
         if not is_already_SP_model_learned:
             # 変数、パス
             self.wikiExtractor_URL = config['init']['wikiExtractor_URL']
@@ -31,9 +31,6 @@ class SentencePieceIniter():
             self.sp_trainer = SentencePieceTrainer(config, self.wiki_extpath, model_dir_abspath)
             # 学習開始
             self.setup_SP()
-        else:
-            ### すでに モデルがあるなら、読み込む。
-            self.sp_model = None
 
 
     def setup_SP(self):

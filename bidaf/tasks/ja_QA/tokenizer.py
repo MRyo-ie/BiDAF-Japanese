@@ -16,8 +16,8 @@ class TokenizerSP():
 
         # SentencePiece を初期化
         sp_initer = SentencePieceIniter(config)
-        self.sp_model = sp_initer.sp_model
-
+        self.sp_model = sp.SentencePieceProcessor()
+        self.sp_model.Load(sp_initer.model_fpath)
 
     def tokenize(self, sequence):
         """
@@ -26,4 +26,11 @@ class TokenizerSP():
         ・ mecab
         の両方使えるようにする予定。
         """
-        print('日本語Tokenizer!!')
+        tokens = self.sp_model.EncodeAsPieces(sequence)
+        # なぜか、最初の文字に 空白記号が入る...。
+        # Token的には間違ってるっぽいので削除。
+        if tokens[0] == '▁':
+            tokens = tokens[1:]
+        if tokens[0][0] == '▁':
+            tokens[0] = tokens[0][1:]
+        return tokens

@@ -102,6 +102,79 @@ class JaQA_Builder(TaskBuilder):
         # ver 違いとか、タスク内で分岐がある場合に手直しする。
         return tier
 
+
+    # @override
+    def get_char_word_loc_mapping(self, context, context_tokens):
+        """
+        （恐らく、答えが文の部分選択なので）文中の単語に番号を振る作業？
+        Returns:
+        ・mapping: 
+                e.g. if context = "hello world" and context_tokens = ["hello", "world"] then
+                0,1,2,3,4 are mapped to ("hello", 0) and 6,7,8,9,10 are mapped to ("world", 1)
+                { 0:("hello", 0),  1:("hello", 0)...,  5:("hello", 0),
+                  6:("world", 1),  7:...,  10:("world", 1) }
+        """
+        '''
+        【問題点】
+        ・「元文」と「分割」　：　原因
+        ・　' '　と　'▁'　：　SP は空白を ＿　に変換する。
+        ・　（　と　(　：　全角／半角
+        ・　…　と　...　：　字数が違う
+        【アルゴリズム】
+        1. 文字数が一致することを確認 → この時点で、mapping は理論上可能だと言える。
+            → 
+        2. 半角／全角 などの細かい差を修正しながら、おかしい文字を探していく。
+        '''
+        # 未知語の扱いは？
+        # step through original characters
+        char_sun = 0
+        for t in context_tokens:
+            char_sun += len(t)
+        
+        acc = ''  # accumulator
+        t_idx = 0  # current word loc
+        mapping = dict()
+        # 文字数が同じなら、そのまま mapping して終わり。
+        if len(context) == char_sun:
+            for c_idx, char in enumerate(context):
+                acc += char
+                # 同じ文字数になったら、tmp変数を初期化
+                if len(acc) == len(context_tokens[t_idx]):
+                    t_start = c_idx - len(acc) + 1
+                    for char_loc in range(t_start, c_idx +1):
+                        mapping[char_loc] = (acc, t_idx)
+                    acc = ''
+                    t_idx += 1
+            return mapping
+        else:
+            # print('\n\n[Error](prob1)  context の文字数が違います。  len(context), char_sun = {}, {}'.format(len(context), char_sun))
+            # ずれた場所を探す。
+            c_loc_s = 0
+            for t_idx, c_token in enumerate(context_tokens):
+                # 最後 の文字がズレてたら、原因は間違いなくそこ。
+                c_loc_e = c_loc_s + len(c_token) -1
+                # 超えてたら、エラーで落ちるので break
+                if c_loc_e >= len(context):
+                    c_loc_e = len(context) -1
+                    break
+                if context[c_loc_e] != c_token[-1]:
+                    # ズレとは関係ないのは続行
+                    if  c_token[-1] == u'▁' or\
+                            context[c_loc_e] == u'℃':
+                        c_loc_s += len(c_token)
+                        continue
+                    break
+                c_loc_s += len(c_token)
+            # print('[確認](prob1)  ズレた場所？　：　', t_idx)
+            # print('              context[i] ：　「{}」'.format( context[c_loc_s-1:c_loc_e+1] ))
+            # print('              tokens[i]  ：　「　{}」'.format( c_token ))
+            # print(context)
+            # print(context_tokens)
+            return None
+    
+    def is_same_char(self, char1, char2):
+        pass
+
     # @override
     def exec_preprocess(self, tier)->list:
         ### 変数初期化
@@ -115,6 +188,7 @@ class JaQA_Builder(TaskBuilder):
         num_exs = 0  # number of examples written to file
         num_mappingprob, num_multiansprob, num_tokenprob = 0, 0, 0
         num_spanalignprob = 0
+        # debug = 0
 
         # Tokenizer
         tokenizer = TokenizerSP()
@@ -129,19 +203,22 @@ class JaQA_Builder(TaskBuilder):
             すなわち、質問と文章 の比が逆。
         """
         # dataset = [ json1, json2, json3,... ]
-        ### 質問文：Q
+        ### 質問文：Q,  答え：A
         for question_id in tqdm(range(len(dataset)), desc="Preprocessing {}".format(tier)):
             q_json = dataset[question_id]
             # << Q >>
             question = q_json['question'].strip()  # string
             question_tokens = tokenizer.tokenize(question)
+            # print('    question_tokens : ', question_tokens)
 
-            ### 問題文：H,  答え：A
+            # << A >>
+            ans_text = q_json['answer']
+
+            ### 問題文：H
             help_docs = q_json['documents']
             for dataid in range(len(help_docs)):
                 # 解答可能性（0~5）のうち、とりあえず 3以上と 0（不可能）を使う。
                 score = help_docs[dataid]['score']
-
                 if score in [1, 2]:
                     # 微妙なデータなので飛ばす。
                     continue
@@ -151,12 +228,12 @@ class JaQA_Builder(TaskBuilder):
                 # The following replacements are suggested in the paper
                 # BidAF (Seo et al., 2016)
                 context = context.replace("``", '" ').replace("''", '" ')
+                # 字数が変わるものを、積極的に変える。
+                context = context.replace("…", '...').replace('\n', '')
+                context = context.replace("（", '(').replace("）", ')')
+                context = context.replace("℃", '°C').replace("Ⅱ", 'II')
                 context_tokens = tokenizer.tokenize(context)
 
-                print(question)
-                print(score)
-                print(context)
-                print(context_tokens)
                 ##### マッピング
                 '''
                 charloc2wordloc
@@ -170,17 +247,8 @@ class JaQA_Builder(TaskBuilder):
                 # (con)text の char mapping に失敗したら、その tsxt は飛ばす。
                 if charloc2wordloc is None:
                     num_mappingprob += 1
-                    print('[Error] char mapping が失敗したようです...。')
-                    print('        qid : {},    title : {}'.format(q_json['qid'], help_docs[dataid]['title']))
                     continue  # skip this context example
 
-                # 試し
-                print(context)
-                sys.exit(0)
-
-                # << A >>
-                ans_text = help_docs[dataid]['answer']
-                # 用意のしようがない...。
                 #ans_start_charloc = qn['answers'][0]['answer_start']
                 if score == 0:
                     is_impossible = 1
@@ -198,6 +266,11 @@ class JaQA_Builder(TaskBuilder):
                     2. 1.で選んだ「答え単語の位置」を、答えとする。
                 """
                 ans_charposi_list = [m.span() for m in re.finditer(ans_text, context)]
+                # 一箇所もなかった場合
+                if len(ans_charposi_list) == 0:
+                    num_multiansprob += 1
+                    continue
+                # とりあえず、最後を取ってる。
                 ans_start_c, ans_end_c = ans_charposi_list[-1]
                 if len(ans_charposi_list) > 1:
                     """
@@ -207,12 +280,16 @@ class JaQA_Builder(TaskBuilder):
                     3. 1.2.をans_charposi_list全てに対して行い、最も多かった単語位置を採用する
                     """
                     num_multiansprob += 1
+                    # print('\n[Error](prob2+)  答えが複数箇所存在 : \n      ', ans_text, ans_charposi_list)
+                    # print(context)
 
                 # Unicode の 2バイト文字対策？
                 if context[ans_start_c:ans_end_c] != ans_text:
                     # Sometimes this is misaligned, mostly because "narrow builds" of Python 2 interpret certain Unicode characters to have length 2 https://stackoverflow.com/questions/29109944/python-returns-length-of-2-for-single-unicode-character-string
                     # We should upgrade to Python 3 next year!
                     num_spanalignprob += 1
+                    print('\n[Error](prob2)  Unicode の 2バイト文字対策？ : ', ans_charposi_list)
+                    print('        (context[ans_start_c:ans_end_c]) {},      (ans_text) {}'.format(context[ans_start_c:ans_end_c], ans_text))
                     continue
 
                 """
@@ -232,14 +309,32 @@ class JaQA_Builder(TaskBuilder):
                 # but the tokenizer regards "fifth-generation" as a single token.
                 # Then ans_tokens has "fifth-generation" but the ans_text is "generation", which doesn't match.
                 ans_tokens = context_tokens[ans_start_w:ans_end_w + 1]
-                if "".join(ans_tokens) != "".join(ans_text.split()):
+                ans_token_t = "".join(ans_tokens)
+                ans_text_t = "".join(ans_text.split())
+                if ans_token_t != ans_text_t:
                     num_tokenprob += 1
-                    print('''
-[Error] 最終テスト失敗...。')
-        join(ans_tokens) : ', "".join(ans_tokens))
-        join(ans_text)   : ', "".join(ans_text))
-                    ''')
-                    continue  # skip this question/answer pair
+#                     print('''\n
+# [Error](prob3)  最終テスト失敗...。
+#         ans_tokens : {}
+#         answer txt : {} '''.format("".join(ans_tokens), "".join(ans_text)))
+                    #print(context_tokens)
+                    '''
+                    例）
+                        ans_tokens : アメリカの
+                        answer txt : アメリカ
+                        ans_tokens : 午後10時から
+                        answer txt : 午後10時
+                        ans_tokens : マンマ・ミーア!』
+                        answer txt : マンマ・ミーア!      ← ここまでセーフ（見分ける方法が...。）
+                        ans_tokens : は大宝律令
+                        answer txt : 大宝律令
+                    '''
+                    # 前後２文字くらいは OK にすることにした。
+                    if ans_token_t[0:2] != ans_text_t[0:2] \
+                            or len(ans_token_t) - 2 > len(ans_text_t):
+                        continue  # skip this question/answer pair
+                    # else:
+                    #     print('[確認](prob3)  <- 見逃しました。')
 
                 examples.append((
                     ' '.join(context_tokens),
@@ -249,14 +344,18 @@ class JaQA_Builder(TaskBuilder):
                 num_exs += 1
 
 
+            # 試し
+            # debug += 1
+            # if debug == 2000:
+            #     sys.exit(0)
 
 
-
-        print("[確認] char mapping との数が会わずに失敗した数 : ", num_mappingprob)
-        print("Number of (context, question, answer) triples discarded because character-based answer span is unaligned with tokenization: ", num_tokenprob)
-        print("Number of (context, question, answer) triples discarded due character span alignment problems (usually Unicode problems): ", num_spanalignprob)
+        print("[確認] char mapping との数が合わずに失敗した数 : ", num_mappingprob)
+        print("Number of (context, question, answer) triples discarded because character-based answer span is unaligned with tokenization: ", num_spanalignprob)
+        print("[確認] Tokenize の切れ目の関係で、助詞とががくっついてしまったパターン: ", num_tokenprob)
+        print("[確認] 答えの句が複数（０個）ある問題文（※ 除いてはいない。） : ", num_multiansprob)
         print("Processed %i examples of total %i\n" %
             (num_exs, num_exs + num_mappingprob + num_tokenprob + num_spanalignprob))
-
+            
         return examples
 
