@@ -1,3 +1,4 @@
+import os
 from bidaf import BidirectionalAttentionFlow
 from bidaf.mode_train import train_model
 from bidaf.scripts import load_data_generators
@@ -23,22 +24,23 @@ parser.add_argument('-div', '--divide_epoch', type=int,
 # Train を実行。
 if __name__ == "__main__":
     args = parser.parse_args()
+    task = args.mode.lower()
     # Drive のパスを読み込み： _settings/SavePaths.cfg  から デフォルト設定を読み込み
-    cfg_path_builder = ConfigPathUtils('Drive')
-    saved_wordDB_path = cfg_path_builder.get_path('wordDB_dir_path')
-    saved_weight_path = cfg_path_builder.get_path('weights_dir_path')
+    root_dir = os.path.dirname(os.path.abspath(__file__))
     # log系のパスを読み込み： _settings/SavePaths.cfg  から デフォルト設定を読み込み
-    cfg_path_builder = ConfigPathUtils('Log')
-    log_tboard_path = cfg_path_builder.get_path('tensorboard_dir_path')
+    cfg_pb_Log = ConfigPathUtils('Log', root_dir)
+    # Drive系のパスを読み込み： _settings/SavePaths.cfg  から デフォルト設定を読み込み
+    cfg_pb_Drive = ConfigPathUtils('Drive', root_dir)
+    # task系のパスを読み込み
+    cfg_pb_base = ConfigPathUtils(task, root_dir)
     # パスをひとまとめにする
     train_paths = {
-        'Drive_wordDB': saved_wordDB_path,
-        'Drive_weight': saved_weight_path,
-        'Log_base_dir' : cfg_path_builder.base_path,
-        'Log_tboard' : log_tboard_path,
+        'base_dir' : cfg_pb_base.get_path('data_path'),
+        'Drive_wordDB': cfg_pb_Drive.get_path('wordDB_dir_path'),
+        'Drive_weight': cfg_pb_Drive.get_path('weights_dir_path'),
+        'Log_base_dir' : cfg_pb_Log.base_path,
+        'Log_tboard' : cfg_pb_Log.get_path('tensorboard_dir_path'),
     }
-    # task系のパスを読み込み
-    cfg_path_builder = ConfigPathUtils('Drive')
 
 
     ### モデル初期化
@@ -48,8 +50,10 @@ if __name__ == "__main__":
     if args.continue_epoch_num > 0:
         init_epoch = args.continue_epoch_num
         #print('     initial_epoch : ', init_epoch)
-        bidaf_model.load_bidaf("{}/bidaf_{:02}.h5".format(saved_weight_path, init_epoch)) # when you want to resume training
-    train_generator, validation_generator = load_data_generators(args.batch_size, 400, squad_version=args.squad_version, div_epoch_num=args.divide_epoch)
+        bidaf_model.load_bidaf("{}/bidaf_{:02}.h5".format(train_paths['Drive_weight'], init_epoch)) # when you want to resume training
+    train_generator, validation_generator = load_data_generators(train_paths, args.batch_size, 400,
+                                                                squad_version=args.squad_version,
+                                                                div_epoch_num=args.divide_epoch)
     ## 学習実行
     keras_model = train_model(bidaf_model, train_paths, train_generator, validation_generator=validation_generator
                                         , workers=1, use_multiprocessing=True, initial_epoch=init_epoch, epochs=10)

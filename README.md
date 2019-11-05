@@ -1,30 +1,27 @@
-# fork 元
+# 元
 https://github.com/ParikhKadam/bidaf-keras
 
 # ライブラリインストール
-conda, pyenv など、仮想環境に入るのを忘れない！
-```
-$ cndac_BiDAF_test
-```
+~~conda, pyenv など、仮想環境に入るのを忘れない！~~
 
 1. pip 関連
     ```
     pip install -r _settings/requirements.txt  
     ```
-1. (GPUが動いてないっぽい場合)
+2. (GPUが動いてないっぽい場合)
    - 確認
-      ```
-      $ python3
-      from tensorflow.python.client import device_lib
-      device_lib.list_local_devices()
-      ```
+        ```
+        $ python3
+        from tensorflow.python.client import device_lib
+        device_lib.list_local_devices()
+        ```
    - keras, tensorflow を再インストール
-    ```
-    pip uninstall tensorflow
-    pip uninstall tensorflow-gpu
-    pip install tensorflow-gpu==1.13.2
-    pip install keras 
-    ```
+        ```
+        pip uninstall tensorflow
+        pip uninstall tensorflow-gpu
+        pip install tensorflow-gpu==1.13.2
+        pip install keras 
+        ```
 
 
 
@@ -82,8 +79,9 @@ What space station supported three manned missions in 1973–1974?
 ```
 
 ## まとめて解かせる方式
-準備中
+未
 
+　
 
 
 # 【Train】SQuAD（英語版）
@@ -116,7 +114,7 @@ keras_model = bidaf_model.train_model(train_generator, validation_generator=vali
 
 ## スクリプト で実行
 ```
-python3 syugyo.py -sv=2.0
+python3 predict.py -sv=2.0
 ```
 - オプションで
   - `-l`：`do_lowercase`
@@ -124,12 +122,18 @@ python3 syugyo.py -sv=2.0
     - 標準出力 ： ` > bidaf/data/tmp/log.txt`
     - エラー出力 ： ` 2> bidaf/data/tmp/log_err.txt`
 
-## Tensorboard
-### サーバー側
+
+# 【Train】日本語機械読解
+未
+
+　
+
+# Tensorboard
+## サーバー側
 ```
 tensorboard --logdir=【logディレクトリのパス】  --port 【ポート番号】
 ```
-### クライアント側
+## クライアント側
 ```
 ssh -L 8765:localhost:【ポート番号】  【sshホスト】
 ```

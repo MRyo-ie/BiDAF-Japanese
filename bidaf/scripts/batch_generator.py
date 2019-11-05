@@ -11,18 +11,18 @@ class BatchGenerator(Sequence):
 
     def __init__(self, paths:dict, gen_type, batch_size, emdim, squad_version, max_passage_length, max_query_length, shuffle, div_epoch_num=1):
         
-        self.vectors = MagnitudeVectors(emdim).load_vectors()
+        self.vectors = MagnitudeVectors(emdim, paths['Drive_wordDB']).load_vectors()
         self.squad_version = squad_version
 
         self.max_passage_length = max_passage_length
         self.max_query_length = max_query_length
 
-        self.context_file = os.path.join(base_dir, 'squad', gen_type + '-v{}.context'.format(squad_version))
-        self.question_file = os.path.join(base_dir, 'squad', gen_type + '-v{}.question'.format(squad_version))
-        self.span_file = os.path.join(base_dir, 'squad', gen_type + '-v{}.span'.format(squad_version))
+        base_dir = paths['base_dir']
+        self.context_file = os.path.join(base_dir, '{}-v{}.context'.format(gen_type, squad_version))
+        self.question_file = os.path.join(base_dir, '{}-v{}.question'.format(gen_type, squad_version))
+        self.span_file = os.path.join(base_dir, '{}-v{}.span'.format(gen_type, squad_version))
         if self.squad_version == 2.0:
-            self.is_impossible_file = os.path.join(base_dir, 'squad', gen_type +
-                                                   '-v{}.is_impossible'.format(squad_version))
+            self.is_impossible_file = os.path.join(base_dir, '{}-v{}.is_impossible'.format(gen_type, squad_version))
         
         # batch の設計
         self.batch_size = batch_size
