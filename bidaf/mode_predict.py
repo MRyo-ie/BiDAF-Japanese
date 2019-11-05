@@ -1,12 +1,18 @@
 from . import BidirectionalAttentionFlow
 from .scripts import MagnitudeVectors, get_best_span, get_word_char_loc_mapping
-from .tasks import tokenize
+
 
 
 # 予測のテンプレート
-def predict_ans(bidaf: BidirectionalAttentionFlow,
+def predict_ans(bidaf: BidirectionalAttentionFlow, mode, wordDB_dir,
                 passage, question, squad_version=1.1, max_span_length=25, do_lowercase=True,
                 return_char_loc=False, return_confidence_score=False):
+
+    if mode == 'squad':
+        from .tasks.squad import tokenize
+    elif mode == 'ja_qa':
+        # （未）
+        from .tasks.ja_QA import TokenizerSP
 
     if type(passage) == list:
         assert all(type(pas) == str for pas in passage), "Input 'passage' must be of type 'string'"
@@ -55,7 +61,7 @@ def predict_ans(bidaf: BidirectionalAttentionFlow,
     else:
         raise TypeError("Input 'question' must be either a 'string' or 'list of strings'")
 
-    vectors = MagnitudeVectors(bidaf.emdim).load_vectors()
+    vectors = MagnitudeVectors(bidaf.emdim, wordDB_dir).load_vectors()
     context_batch = vectors.query(contexts, bidaf.max_passage_length)
     question_batch = vectors.query(questions, bidaf.max_query_length)
 

@@ -25,7 +25,7 @@ parser.add_argument('-div', '--divide_epoch', type=int,
 if __name__ == "__main__":
     args = parser.parse_args()
     task = args.mode.lower()
-    # Drive のパスを読み込み： _settings/SavePaths.cfg  から デフォルト設定を読み込み
+    # 現在のディレクトリ
     root_dir = os.path.dirname(os.path.abspath(__file__))
     # log系のパスを読み込み： _settings/SavePaths.cfg  から デフォルト設定を読み込み
     cfg_pb_Log = ConfigPathUtils('Log', root_dir)

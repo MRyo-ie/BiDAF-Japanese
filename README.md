@@ -39,7 +39,7 @@ https://github.com/ParikhKadam/bidaf-keras#pre-trained-models
        - embedding dimension: 400
        - squad version: 1.1
 
-2. bidaf/data/models/ に移動する。
+2. bidaf/Drive/weights/ に移動する。
    - ※ 場所を変えたい場合は、
       `_settings/BiDAF.cfg` の `dir_path` に、パスを指定するとできる！
 
